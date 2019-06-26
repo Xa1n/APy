@@ -1,25 +1,37 @@
-from flask import Flask, request
+from flask import Flask, request, abort
 from flask_restful import Resource, Api
 from sqlalchemy import create_engine
 from json import dumps
 from flask_jsonpify import jsonify 
 
-db_connect = create_engine('sqlite:///chinook.db')
 app = Flask(__name__)
-api = Api(app)
 
-@app.route('/')
-def index():
-    return "Hello Xain"
+tasks = [
+    {
+        'id': 1,
+        'title': u'Get groceries',
+        'description': u'Milk, Cheese, Bread, Fruit, Cereal', 
+        'done': False
+    },
+    {
+        'id': 2,
+        'title': u'Learn Python',
+        'description': u'Keep doing Python projects', 
+        'done': False
+    }
+]
 
-class Employees(Resource):
-    def get(self):
-        conn = db_connect.connect() # connect to database
-        query = conn.execute("select * from employees") # This line performs query and returns json result
-        return {'employees': [i[0] for i in query.cursor.fetchall()]} # Fetches first column that is Employee ID
-        
+@app.route('/todo/api/tasks', methods=['GET'])
+def get_tasks():
+    return jsonify({'tasks': tasks})
 
-api.add_resource(Employees, '/employees') # Route_1
+
+@app.route('/todo/api/tasks/<int:task_id>', methods=['GET'])
+def get_task(task_id):
+    task = [task for task in tasks if task['id'] == task_id]
+    if len(task) == 0:
+        abort(404)
+    return jsonify({'task': task[0]})
 
 
 if __name__ == '__main__':
